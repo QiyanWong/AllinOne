@@ -31,4 +31,12 @@ class ListNode {
       System.out.println("null");
 
     }
+    public static ListNode buildList(int[] array){
+      ListNode head = new ListNode(array[0]);
+      ListNode cur = head;
+      for(int i = 1; i < array.length; i++){
+        cur.next = new ListNode(array[i]);
+      }
+      return head;
+    }
   }

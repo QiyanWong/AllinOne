@@ -1628,6 +1628,501 @@ public class AllinOne {
 
         return list;
     }
+    public boolean wordBreak(String input, List<String> dict) {
+        // M[i]: substring from 0 to i including i can be composed by words in dict
+        boolean[] M = new boolean[input.length()];
+        Set<String> set = new HashSet<>();
+        for(String s : dict){
+            set.add(s);
+        }
+        // base case
+        M[0] = set.contains(input.charAt(0)) ? true : false;
+        //start from M[1]
+        for(int i = 1; i < M.length; i++){
+            //check if substring[0,i] in the dict
+            if(set.contains(input.substring(0,i + 1))){
+                M[i] = true;
+                continue;
+            }
+            //check if it can be composed
+            for(int j = 0; j < i; j++){
+                if(M[j] == true && set.contains(input.substring(j + 1,i + 1))){
+                    M[i] = true;
+                    Scanner sc = new Scanner(System.in);
+                    break;
+                }
+            }
+        }
+        return M[input.length() - 1];
+    }
+    public int longest(int[] array) {
+        // length[i] means longest ascending subsequence from 0 to ith element including i
+        int length[] = new int[array.length];
+        // base case
+        length[0] = 1;
+        int globalmax = 1;
+        for(int i = 1; i < array.length; i++){
+            length[i] = 1;
+            for(int j = 1; j <= i; j++){
+                if(array[i] >= array[i - j] && length[i] - 1 <= length[i - j]){
+                    length[i] = length[i - j] + 1;
+                }
+            }
+
+            globalmax = Math.max(globalmax,length[i]);
+        }
+        return globalmax;
+    }
+    public int largestarm(int[][] matrix) {
+        int n = matrix.length;
+        int m = matrix[0].length;
+        if(matrix == null || n == 0 || m == 0) return 0;
+        int globalmax = 0;
+        int[][] length = new int[n][m];
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < m; j++){
+                length[i][j] = Integer.MAX_VALUE;
+                length[i][j] = Math.min(length[i][j],scan(i,j,matrix,1));
+                length[i][j] = Math.min(length[i][j],scan(i,j,matrix,2));
+                length[i][j] = Math.min(length[i][j],scan(i,j,matrix,3));
+                length[i][j] = Math.min(length[i][j],scan(i,j,matrix,4));
+                globalmax = Math.max(globalmax,length[i][j]);
+            }
+        }
+        return globalmax;
+    }
+    private int scan(int x, int y, int[][] matrix, int direction){
+        int side = 0;
+        switch(direction){
+            //up
+            case 1:
+                while(x >= 0){
+                    if(matrix[x--][y] == 1){
+                        side += 1;
+                    }
+                    else return side;
+                }
+                return side;
+            //left
+            case 2:
+                while(y >= 0){
+                    if(matrix[x][y--] == 1){
+                        side += 1;
+                    }
+                    else return side;
+                }
+                return side;
+            //right
+            case 3:
+                while(y < matrix.length){
+                    if(matrix[x][y++] == 1){
+                        side += 1;
+                    }
+                    else return side;
+                }
+                return side;
+            //down
+            case 4:
+                while(x < matrix[0].length){
+                    if(matrix[x++][y] == 1){
+                        side += 1;
+                    }
+                    else return side;
+                }
+                return side;
+        }
+        return side;
+    }
+    public int[] dedup(int[] array) {
+        if(array == null || array.length <= 1) return array;
+        // all letters to the left of slow not including slow are solution
+        int slow = 0;
+        boolean nodup = false;
+        for(int i = 0; i < array.length; i++){
+            if(i < array.length - 1 && array[i] == array[i + 1]){
+                while(i < array.length - 1 && array[i] == array[i + 1]){
+                    i++;
+                }
+            } else nodup = true;
+            if(slow > 0 && array[i] == array[slow - 1]){
+                slow--;
+                nodup = false;
+            }
+            if(nodup){
+                array[slow] = array[i];
+                nodup = false;
+            }
+        }
+        return Arrays.copyOf(array,slow);
+    }
+    public ListNode merge(List<ListNode> listOfLists) {
+        PriorityQueue<ListNode> minHeap = new PriorityQueue<>(new Comparator<ListNode>(){
+            @Override
+            public int compare(ListNode a, ListNode b){
+                if(a.value == b.value) return 0;
+                return a.value < b.value ? -1 : 1;
+            }
+        });
+        for(ListNode head : listOfLists){
+            minHeap.offer(head);
+        }
+        return merge(listOfLists,minHeap);
+    }
+    private ListNode merge(List<ListNode> listOfLists, PriorityQueue<ListNode> minHeap){
+        if(minHeap.isEmpty()) return null;
+        ListNode cur = minHeap.poll();
+        if(cur.next != null)
+            minHeap.offer(cur.next);
+        cur.next = merge(listOfLists,minHeap);
+        return cur;
+    }
+    public TreeNode str2tree(String s) {
+        if(s == null || s.length() == 0) return null;
+        TreeNode root = new TreeNode((int)s.charAt(0) - 48);
+        int[] pair = pair(s,1);
+        TreeNode left =  str2tree(s.substring(pair[0] + 1, pair[1]));
+        TreeNode right = null;
+        if(pair[1] < s.length() - 1){
+            pair = pair(s,pair[1] + 1);
+            right = str2tree(s.substring(pair[0] + 1,pair[1]));
+        }
+        root.left = left;
+        root.right =right;
+        return root;
+    }
+    private int[] pair(String s, int index){
+        int l = 0;
+        int[] result = new int[2];
+        for(int i = index; i < s.length(); i++){
+            if(s.charAt(i) == '(') l++;
+            else if(s.charAt(i) == ')'){
+                l--;
+                if(l == 0){
+                    result[0] = index;
+                    result[1] = i;
+                    return result;
+                }
+            }
+        }
+        return result;
+    }
+
+    public TreeNode reconstructPre(int[] inOrder, int[] preOrder) {
+        if(preOrder == null || preOrder.length == 0) return null;
+        Map<Integer,Integer> map = new HashMap<>();
+        for(int i = 0; i < inOrder.length; i++){
+            map.put(i, inOrder[i]);
+        }
+        int index = map.get(preOrder[0]);
+        return reconstruct(preOrder, map,
+                0, inOrder.length - 1, 0, inOrder.length -1);
+    }
+    private TreeNode reconstruct(int[] preOrder,
+                                 Map<Integer,Integer> map,
+                                 int lin, int rin, int lpre, int rpre){
+        //base case
+        if(lin > rin){
+            return null;
+        }
+        TreeNode root = new TreeNode(preOrder[lpre]);
+        int index = map.get(root.value);
+        int leftsize = index - lpre;
+        root.left = reconstruct(preOrder, map,
+                lin, lin +leftsize - 1, lpre + 1, lpre + leftsize);
+        root.right = reconstruct(preOrder, map,
+                lin + leftsize + 1, rin, lpre + leftsize + 1, rpre);
+        return root;
+    }
+
+    public TreeNode reconstruct(int[] inOrder, int[] levelOrder) {
+        if(inOrder == null || inOrder.length == 0) return null;
+        //root
+        TreeNode root = new TreeNode(levelOrder[0]);
+        //base case
+        if(inOrder.length == 1) return root;
+        Set<Integer> leftsub = new HashSet<>();
+        Set<Integer> rightsub = new HashSet<>();
+        List<Integer> leftin = new ArrayList<>();
+        List<Integer> rightin = new ArrayList<>();
+        List<Integer> leftlvl = new ArrayList<>();
+        List<Integer> rightlvl = new ArrayList<>();
+        int flag = 0;
+        for(int i = 0; i < inOrder.length; i++){
+            if(inOrder[i] != levelOrder[0] && flag == 0){
+                leftsub.add(inOrder[i]);
+                leftin.add(inOrder[i]);
+            }
+            else if(inOrder[i] == levelOrder[0]){
+                flag = 1;
+            }
+            else if(flag == 1){
+                rightsub.add(inOrder[i]);
+                rightin.add(inOrder[i]);
+            }
+        }
+        for(int i = 0; i < levelOrder.length; i++){
+            if(leftsub.contains(levelOrder[i])) leftlvl.add(levelOrder[i]);
+            if(rightsub.contains(levelOrder[i])) rightlvl.add(levelOrder[i]);
+        }
+        TreeNode left = reconstruct(toInt(leftin),toInt(leftlvl));
+        TreeNode right = reconstruct(toInt(rightin),toInt(rightlvl));
+        root.left = left;
+        root.right = right;
+        return root;
+    }
+    private int[] toInt(List<Integer> array){
+        int[] result = new int[array.size()];
+        for(int i = 0; i < array.size(); i++){
+            result[i] = array.get(i);
+        }
+        return result;
+    }
+    public List<String> subSets(String set) {
+        List<String> results = new ArrayList<>();
+        if(set == null || set.length() == 0) return results;
+        char[] array = set.toCharArray();
+        Arrays.sort(array);
+        StringBuilder sb = new StringBuilder();
+        permutate(array,sb,0,results);
+        return results;
+    }
+    public List<Integer> closest(int[] a, int[] b, int[] c, int k) {
+        PriorityQueue<Cell1> minHeap = new PriorityQueue<>(k,new Comparator<Cell1>(){
+            @Override
+            public int compare(Cell1 a, Cell1 b){
+                if(a.value == b.value) return 0;
+                return a.value > b.value ? 1 : -1;
+            }
+        });
+        int[][][] visited = new int[a.length][b.length][c.length];
+        visited[0][0][0] = 1;
+        minHeap.offer(new Cell1(0,0,0,val(a[0],b[0],c[0])));
+        while(k > 0){
+            Cell1 d = minHeap.poll();
+            if(d.x + 1 < a.length && visited[d.x + 1][d.y][d.z] != 1){
+                minHeap.offer(new Cell1(d.x + 1, d.y, d.z,val(a[d.x + 1],b[d.y],c[d.z])));
+                visited[d.x + 1][d.y][d.z] = 1;
+            }
+            if(d.y + 1 < b.length && visited[d.x][d.y + 1][d.z] != 1){
+                minHeap.offer(new Cell1(d.x + 1, d.y, d.z,val(a[d.x],b[d.y + 1],c[d.z])));
+                visited[d.x][d.y + 1][d.z] = 1;
+            }
+            if(d.z + 1 < c.length && visited[d.x][d.y][d.z + 1] != 1){
+                minHeap.offer(new Cell1(d.x, d.y, d.z + 1, val(a[d.x],b[d.y],c[d.z + 1])));
+                visited[d.x][d.y][d.z + 1] = 1;
+            }
+            k--;
+        }
+        List<Integer> results = new ArrayList<>();
+        Cell1 e = minHeap.poll();
+        System.out.println(e.toString());
+        results.add(a[e.x]);
+        results.add(b[e.y]);
+        results.add(c[e.z]);
+        return results;
+    }
+    private long val(int x, int y, int z){
+        return x * x + y * y + z * z;
+    }
+    class Cell1{
+        int x;
+        int y;
+        int z;
+        long value;
+        Cell1(int x, int y, int z, long value){
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.value = value;
+        }
+        @Override
+        public String toString(){
+            return "" + x + y + z;
+        }
+
+    }
+    private void permutate(char[] array, StringBuilder sb,int index, List<String> results){
+        if(index == array.length){
+            results.add(new String(sb));
+            return;
+        }
+        sb.append(array[index]);
+        permutate(array, sb, index + 1, results);
+        sb.deleteCharAt(sb.length() - 1);
+        //add noting
+        while(index < array.length - 1 && array[index] == array[index + 1]){
+            index++;
+        }
+        permutate(array,sb,index + 1,results);
+    }
+    public int subarrayBitwiseORs(int[] A) {
+        if(A == null || A.length == 0) return 0;
+        Set<Integer> set = new HashSet<>();
+        int M[][] = new int[A.length + 1][A.length];
+        for(int i = 1; i <= A.length; i++){
+            if(i == 1){
+                set.add(A[i]);
+                M[1][i] = A[i];
+            }
+            else for(int j = 0; j <= A.length - i; j++){
+                M[i][j] = M[i- 1][j] | A[j + i - 1];
+                set.add(M[i][j]);
+            }
+        }
+        return set.size();
+    }
+    public ListNode addTwoNumbers2(ListNode l1, ListNode l2) {
+        int carry = 0;
+        Deque<ListNode> stack1 = buildStack(l1);
+        Deque<ListNode> stack2 = buildStack(l2);
+        ListNode prev = null;
+        while(!stack1.isEmpty() || !stack2.isEmpty()){
+            ListNode node1;
+            ListNode node2;
+            if(!stack1.isEmpty()){
+                node1 = stack1.pollLast();
+            }
+            else node1 = new ListNode(0);
+            if(!stack2.isEmpty()){
+                node2 = stack2.pollLast();
+            }
+            else node2 = new ListNode(0);
+            int sum = node1.value + node2.value + carry;
+            if(sum > 10){
+                node1.value = sum - 10;
+                carry = 1;
+            }
+            else {
+                node1.value = sum;
+                carry = 0;
+            }
+            node1.next = prev;
+            prev = node1;
+        }
+        if(carry != 0){
+            ListNode newNode = new ListNode(carry);
+            newNode.next = prev;
+            return newNode;
+        }
+        return prev;
+    }
+    private Deque<ListNode> buildStack(ListNode head){
+        Deque<ListNode> stack = new ArrayDeque<>();
+        while(head != null){
+            stack.offerLast(head);
+            head = head.next;
+        }
+        return stack;
+    }
+    public int uniquePaths(int m, int n) {
+        //mini[i][j] means how many ways to reach i,j spot
+        int[][] mini = new int[m][n];
+        //base case:
+        mini[0][0] = 1;
+        for(int i = 0; i < m; i++){
+            for(int j = 0; j < n; j++){
+                int x = 0;
+                int y = 0;
+                if(i - 1 >= 0){
+                    x = mini[i - 1][j];
+                }
+                if(j - 1 >= 0){
+                    y = mini[i][j - 1];
+                }
+                mini[i][j] = x + y;
+            }
+        }
+        return mini[m - 1][n - 1];
+    }
+    public String reverseWords2(String s) {
+        if(s == null || s.length() == 0) return s;
+        char[] array = s.toCharArray();
+        reverse(array, 0, array.length - 1);
+        //all letters to left of slow not including slow are solution
+        int slow = 0;
+        int begin = 0;
+        for(int i = 0; i <= array.length; i++){
+            if(i == array.length || array[i] == ' '){
+                reverse(array, begin, i - 1);
+                begin = i + 1;
+            }
+        }
+        slow = removeSpace(array);
+        return new String(array, 0, slow + 1);
+    }
+    private int removeSpace(char[] s){
+        int slow = -1;
+        for(int i = 0; i < s.length; i++){
+            if(s[i] != ' '){
+                s[++slow] = s[i];
+            }
+            else if(i > 0 && s[i - 1] != ' '){
+                s[++slow] = ' ';
+            }
+        }
+        if(slow > 0 && s[slow] == ' ') slow--;
+        return slow;
+    }
+    private void reverse (char[] s, int i, int j){
+        while(i <= j){
+            swap2(s, i++, j--);
+        }
+    }
+    private void swap2(char[] s, int i, int j){
+        char temp = s[i];
+        s[i] = s[j];
+        s[j] = temp;
+    }
+    public String longestCommonPrefix(String[] strs) {
+        Trie root = new Trie('n',false);
+        int max[] = new int[1];
+        String[] res = new String[1];
+        res[0] = "";
+        for(int i = 0; i < strs.length; i++){
+            String s = strs[i];
+            prefix(0,0,s,root,max,res);
+        }
+        return res[0];
+    }
+    private void prefix(int count, int index, String s,
+                        Trie root, int[] max, String[] res){
+        if(index == s.length()) {
+            if (count > max[0]) {
+                max[0] = count;
+                res[0] = s.substring(0, count);
+            }
+            return;
+        }
+            if (root.branch.containsKey(s.charAt(index))) {
+                count++;
+                prefix(count, index + 1, s,
+                        root.branch.get(s.charAt(index)), max, res);
+            } else {
+                root.branch.put(s.charAt(index), new Trie(s.charAt(index), false));
+                if (count > max[0]) {
+                    max[0] = count;
+                    res[0] = s.substring(0, count);
+                }
+                prefix(count, index + 1, s,
+                        root.branch.get(s.charAt(index)), max, res);
+            }
+        }
+    class Trie {
+        Map<Character,Trie> branch;
+        char name;
+        boolean isWord;
+        Trie(char name, boolean isWord) {
+            branch = new HashMap<>();
+            this.name = name;
+            this.isWord = isWord;
+        }
+        @Override
+        public String toString(){
+            return "" + this.name;
+        }
+    }
+
+
 
     public static void main(String[] args) {
         AllinOne test = new AllinOne();
@@ -1647,13 +2142,10 @@ public class AllinOne {
             node = node.next;
 
         }
-        Map<Character,Integer> map1 = new HashMap<>();
-        map1.put('c',1);
-        Map<Character,Integer> map2 = new HashMap<>();
-        map2.put('c',1);
-        System.out.println(map1.hashCode() == map2.hashCode());
+        List<ListNode> array = new ArrayList<>();
+        array.add(new ListNode(1));
+        String s = "4(2(3)(1))(6(5))";
 
-
-
+        System.out.println(test.longestCommonPrefix(new String[] {"flow", "flee", "fly"}));
     }
 }
